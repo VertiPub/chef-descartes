@@ -15,7 +15,3 @@ default['descartes']['role_name'] = 'dashboard_server'
 default['descartes']['thin_port'] = 8080
 default['descartes']['install_root'] = '/opt/descartes'
 default['descartes']['user'] = 'descartes'
-#just install bundler , rest will be installed using bundler
-default['descartes']['gems'] = [
-                                { 'name' => 'bundler'},
-			]
