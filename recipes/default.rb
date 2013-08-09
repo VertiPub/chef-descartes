@@ -1,3 +1,12 @@
+#
+# Cookbook Name:: descartes
+# Recipe:: default
+#
+# Copyright 2013, RideCharge, Inc.
+#
+# All rights reserved - Do Not Redistribute
+#
+
 include_recipe 'postgresql::server'
 include_recipe 'database::postgresql'
 include_recipe 'redis'
