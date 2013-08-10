@@ -51,6 +51,24 @@ end
 # Create user for descartes
 user node['descartes']['user']
 
+
+template '/etc/init.d/descartes' do
+  source 'descartes-initd.erb'
+  owner 'root'
+  group 'root'
+  mode '0755'
+  variables(
+    :install_root  => node['descartes']['install_root'],
+    :user          => node['descartes']['user']
+  )
+
+end
+
+service 'descartes' do
+  supports :status => true, :start => true, :stop => true, :restart => true
+  action :enable 
+end
+
 # Deploy descartes
 deploy node['descartes']['install_root'] do
   user node['descartes']['user']
@@ -104,7 +122,7 @@ deploy node['descartes']['install_root'] do
 
   # This callback will first stop any of the running instances.
   before_restart do
-    execute "stop-descartes" do
+    execute 'stop-descartes' do
       Chef::Log.info "Stop if descartes is running"
       cwd release_path
       user node['descartes']['user']
@@ -119,7 +137,7 @@ deploy node['descartes']['install_root'] do
 end
 
 
-execute "start-descartes" do
+execute 'start-descartes' do
   Chef::Log.info "Start descartes"
   cwd "#{node['descartes']['install_root']}/current"
   user node['descartes']['user']

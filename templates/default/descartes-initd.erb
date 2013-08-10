@@ -1,0 +1,70 @@
+#!/bin/bash
+# This shell script takes care of starting and stopping
+# descartes
+
+. /etc/init.d/functions
+
+lockfile=/var/lock/subsys/descartes
+pidfile=/var/run/descartes.pid
+descartes_user=default['descartes']['user']
+
+function start() {
+        [ `id -u` -eq 0 ] || exit 4
+	echo -n "Starting descartes..."
+        cd <%= @install_root %>/current
+        su <%= @user %> -c "bundle exec rackup -p #{node['descartes']['thin_port']} -s thin -P $pidfile -D"
+        RETVAL=$?
+        if [ $RETVAL -eq 0 ]; then
+                touch $lockfile
+        fi
+        echo
+        return $RETVAL
+}
+
+function stop() {
+        [ `id -u` -eq 0 ] || exit 4
+        echo -n "Stopping descartes... "
+
+        cd <%= @descartes_install_root %>/current
+
+	#if [[ -f $pid_file  && -e /proc/$(cat $pid_file) ]]; then 
+		kill -9 $(cat $pid_file)
+	#fi
+
+        RETVAL=$?
+
+        # Now we want to remove lock file and hardlink of pid file
+        [ $RETVAL -eq 0 ] && rm -f $pidfile $lockfile
+        echo
+        return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+        start)
+                start
+                RETVAL=$?
+                ;;
+        stop)
+                stop
+                RETVAL=$?
+                ;;
+        status)
+                status -p $pidfile 
+                RETVAL=$?
+                ;;
+        restart)
+                stop
+                start
+                RETVAL=$?
+                ;;
+        usage)
+                echo $"Usage: $0 {start|stop|restart|status|usage}"
+                RETVAL=0
+                ;;
+        *)
+                echo $"Usage: $0 {start|stop|restart|status|usage}"
+                RETVAL=2
+esac
+
+exit $RETVAL
