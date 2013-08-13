@@ -20,5 +20,5 @@ default['descartes']['thin_port'] = 8080
 default['descartes']['install_root'] = '/opt/descartes'
 default['descartes']['user'] = 'descartes'
 default['descartes']['group'] = 'descartes'
-default['descartes']['uid'] = nil
-default['descartes']['gid'] = nil
+default['descartes']['uid'] = 200
+default['descartes']['gid'] = 200

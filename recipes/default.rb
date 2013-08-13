@@ -66,6 +66,18 @@ user node['descartes']['user'] do
   action :create
 end
 
+template '/etc/init.d/descartes' do
+  source 'init.d.erb'
+  owner 'root'
+  group 'root'
+  mode '0755'
+  variables(
+   :install_root => node['descartes']['install_root'],
+   :user => node['descartes']['user'],
+   :thin_port => node['descartes']['thin_port']
+  )
+end
+
 service 'descartes' do
   supports :status => true, :start => true, :stop => true, :restart => true
   action [:enable] 
@@ -76,6 +88,8 @@ deploy node['descartes']['install_root'] do
   user node['descartes']['user']
   repository 'git://github.com/obfuscurity/descartes.git'
   revision 'master'
+  # env is needed for db migration
+  environment "DATABASE_URL" => "postgres://#{node['postgresql']['user']}:#{node['postgresql']['password']['postgres']}@localhost/descartes"
   # Override the default behavior i.e. to avoid symlinking database.yml(it is not present in our case)
   symlink_before_migrate ({})
   # Don't create any dir as we don't need any.
@@ -123,24 +137,9 @@ deploy node['descartes']['install_root'] do
     end
 
   end
-  
-  before_restart do
-    template '/etc/init.d/descartes' do
-    source 'init.d.erb'
-    owner 'root'
-    group 'root'
-    mode '0755'
-    variables(
-     :install_root => node['descartes']['install_root'],
-     :user => node['descartes']['user'],
-     :thin_port => node['descartes']['thin_port']
-    )
-    end
-  end
 
   migrate true
   migration_command "cd #{node['descartes']['install_root']}/current; bundle exec rake db:migrate:up"
-  #environment descartes_env
   action :deploy
   notifies :restart, "service[descartes]"
 end
