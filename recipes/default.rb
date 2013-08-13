@@ -22,21 +22,6 @@ postgresql_database 'descartes' do
   action :create
 end
 
-=begin
-descartes_env = {
-  "DATABASE_URL" => "postgres://#{node['postgresql']['user']}:#{node['postgresql']['password']['postgres']}@localhost/descartes",
-  "RACK_ENV" => 'production',
-  "SESSION_SECRET" => node['descartes']['session_secret'],
-  "GRAPHITE_URL" => node['descartes']['graphite_url'],
-  "OAUTH_PROVIDER" => node['descartes']['oauth_provider'],
-  "GOOGLE_OAUTH_DOMAIN" => node['descartes']['google_oauth_domain'],
-  "METRICS_UPDATE_INTERVAL" => node['descartes']['metrics_update_interval']
-}
-descartes_env['GRAPHITE_USER'] = node['descartes']['graphite_user'] if node['descartes']['graphite_user']
-descartes_env['GRAPHITE_PASS'] = node['descartes']['graphite_pass'] if node['descartes']['graphite_pass']
-descartes_env['API_KEY'] = node['descartes']['api_key'] if node['descartes']['api_key']
-=end
-
 # Install bundler
 # Rest of the gems will be installed using bundle install
 gem_package 'bundler' do
@@ -56,12 +41,9 @@ group node['descartes']['group'] do
   action :create
 end
 
-
-# Create user for descartes
 user node['descartes']['user'] do
   uid node['descartes']['uid']
-  gid node['descartes']['gid']
-  # should the user be system ?
+  gid node['descartes']['group']
   system true
   action :create
 end
@@ -86,6 +68,7 @@ end
 # Deploy descartes
 deploy node['descartes']['install_root'] do
   user node['descartes']['user']
+  group node['descartes']['descartes']
   repository 'git://github.com/obfuscurity/descartes.git'
   revision 'master'
   # env is needed for db migration
@@ -102,23 +85,20 @@ deploy node['descartes']['install_root'] do
     # Create directorioes in shared path
     %w{vendor_bundle pids logs}.each do |dname|
       directory "#{new_resource.shared_path}/#{dname}" do
-        user new_resource.user
+        owner new_resource.user
         group new_resource.group
         mode '0755'
       end
     end
-
     # release_path contains the current release path
     directory "#{release_path}/vendor" do
-      user new_resource.user
+      owner new_resource.user
       group new_resource.group
       mode '0755'
     end
-
     link "#{release_path}/vendor/bundle" do
       to "#{new_resource.shared_path}/vendor_bundle"
     end
-   
     # Create a file for all the required env variables for descartes
     template "#{node['descartes']['install_root']}/shared/env" do
       source 'descartes-env.erb'
@@ -126,16 +106,13 @@ deploy node['descartes']['install_root'] do
       group new_resource.group
       mode '0644'
     end
-
     # Install gems using bundle install. It will look for a Gemfile.lock in current release
     execute "bundle install --path=vendor/bundle --deployment" do
       Chef::Log.info "Running bundle install"
       cwd release_path
       user new_resource.user
-      #environment new_resource.environment
       only_if {::File.exists?(::File.join(release_path, "Gemfile.lock"))}
     end
-
   end
 
   migrate true

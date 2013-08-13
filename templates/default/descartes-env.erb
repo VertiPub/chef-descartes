@@ -1,11 +1,8 @@
-# Insert environment variables you'd like to use in development mode.
-#
 # Graphite server settings
 export GRAPHITE_URL=<%= node['descartes']['graphite_url'] %>
 export GRAPHITE_USER=<%= node['descartes']['graphite_user'] %>
 export GRAPHITE_PASS=<%= node['descartes']['graphite_pass'] %>
-export GRAPH_TEMPLATE=<%= node['descartes']['template'] %>
-
+export GRAPH_TEMPLATE=<%= node['descartes']['graphite_template'] %>
 
 # Misc
 export DATABASE_URL="postgres://<%= node['postgresql']['user'] %>:<%= node['postgresql']['password']['postgres'] %>@localhost/descartes"
