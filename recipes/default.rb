@@ -22,6 +22,7 @@ postgresql_database 'descartes' do
   action :create
 end
 
+=begin
 descartes_env = {
   "DATABASE_URL" => "postgres://#{node['postgresql']['user']}:#{node['postgresql']['password']['postgres']}@localhost/descartes",
   "RACK_ENV" => 'production',
@@ -34,6 +35,7 @@ descartes_env = {
 descartes_env['GRAPHITE_USER'] = node['descartes']['graphite_user'] if node['descartes']['graphite_user']
 descartes_env['GRAPHITE_PASS'] = node['descartes']['graphite_pass'] if node['descartes']['graphite_pass']
 descartes_env['API_KEY'] = node['descartes']['api_key'] if node['descartes']['api_key']
+=end
 
 # Install bundler
 # Rest of the gems will be installed using bundle install
@@ -48,25 +50,25 @@ end
   end
 end
 
+group node['descartes']['group'] do
+  gid node['descartes']['gid']
+  system true
+  action :create
+end
+
+
 # Create user for descartes
-user node['descartes']['user']
-
-
-template '/etc/init.d/descartes' do
-  source 'descartes-initd.erb'
-  owner 'root'
-  group 'root'
-  mode '0755'
-  variables(
-    :install_root  => node['descartes']['install_root'],
-    :user          => node['descartes']['user']
-  )
-
+user node['descartes']['user'] do
+  uid node['descartes']['uid']
+  gid node['descartes']['gid']
+  # should the user be system ?
+  system true
+  action :create
 end
 
 service 'descartes' do
   supports :status => true, :start => true, :stop => true, :restart => true
-  action :enable 
+  action [:enable] 
 end
 
 # Deploy descartes
@@ -75,17 +77,16 @@ deploy node['descartes']['install_root'] do
   repository 'git://github.com/obfuscurity/descartes.git'
   revision 'master'
   # Override the default behavior i.e. to avoid symlinking database.yml(it is not present in our case)
-  symlink_before_migrate {}
+  symlink_before_migrate ({})
   # Don't create any dir as we don't need any.
   create_dirs_before_symlink []
   # This layout modifier will create symlinks from shared folder to release directory
-  symlinks { 'pids' => 'pids', 
-             'log' => 'log' 
-	   }
+  symlinks  "pids" => "pids", 
+            "logs" => "logs" 
 
   before_migrate do
     # Create directorioes in shared path
-    %w{vendor_bundle pids log}.each do |dname|
+    %w{vendor_bundle pids logs}.each do |dname|
       directory "#{new_resource.shared_path}/#{dname}" do
         user new_resource.user
         group new_resource.group
@@ -103,46 +104,43 @@ deploy node['descartes']['install_root'] do
     link "#{release_path}/vendor/bundle" do
       to "#{new_resource.shared_path}/vendor_bundle"
     end
+   
+    # Create a file for all the required env variables for descartes
+    template "#{node['descartes']['install_root']}/shared/env" do
+      source 'descartes-env.erb'
+      owner new_resource.user
+      group new_resource.group
+      mode '0644'
+    end
 
     # Install gems using bundle install. It will look for a Gemfile.lock in current release
     execute "bundle install --path=vendor/bundle --deployment" do
       Chef::Log.info "Running bundle install"
       cwd release_path
       user new_resource.user
-      environment new_resource.environment
+      #environment new_resource.environment
       only_if {::File.exists?(::File.join(release_path, "Gemfile.lock"))}
     end
 
   end
-
-  migrate true
-  migration_command "cd #{node['descartes']['install_root']}/current; bundle exec rake db:migrate:up"
-  environment descartes_env
-  action :deploy
-
-  # This callback will first stop any of the running instances.
+  
   before_restart do
-    execute 'stop-descartes' do
-      Chef::Log.info "Stop if descartes is running"
-      cwd release_path
-      user node['descartes']['user']
-      pid_file = "pids/descartes.pid"
-      command "if [ -f #{pid_file} ] && [ -e /proc/$(cat #{pid_file}) ]; then kill -9 `cat #{pid_file}`; fi"
-      action :run
+    template '/etc/init.d/descartes' do
+    source 'init.d.erb'
+    owner 'root'
+    group 'root'
+    mode '0755'
+    variables(
+     :install_root => node['descartes']['install_root'],
+     :user => node['descartes']['user'],
+     :thin_port => node['descartes']['thin_port']
+    )
     end
   end
 
-  notifies :run, execute[start-descartes]	
-
+  migrate true
+  migration_command "cd #{node['descartes']['install_root']}/current; bundle exec rake db:migrate:up"
+  #environment descartes_env
+  action :deploy
+  notifies :restart, "service[descartes]"
 end
-
-
-execute 'start-descartes' do
-  Chef::Log.info "Start descartes"
-  cwd "#{node['descartes']['install_root']}/current"
-  user node['descartes']['user']
-  command "bundle exec rackup -p #{node['descartes']['thin_port']} -s thin -P pids/descartes.pid -D"
-  environment descartes_env
-  action :nothing
-end
-

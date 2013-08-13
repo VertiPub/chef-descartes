@@ -10,8 +10,15 @@ default['descartes']['metrics_update_interval'] = '15m'
 default['descartes']['graphite_user'] = ''
 default['descartes']['graphite_pass'] = ''
 default['descartes']['api_key'] = nil # nil or empty means NO api key will be set
-
+default['descartes']['template'] = 'default' 
+default['descartes']['metrics_update_on_boot'] = 'true'
+default['descartes']['metrics_update_timeout'] = 300
+default['descartes']['use_svg'] = 'false'
+default['descartes']['rack_env'] = 'production'
 default['descartes']['role_name'] = 'dashboard_server'
 default['descartes']['thin_port'] = 8080
 default['descartes']['install_root'] = '/opt/descartes'
 default['descartes']['user'] = 'descartes'
+default['descartes']['group'] = 'descartes'
+default['descartes']['uid'] = nil
+default['descartes']['gid'] = nil

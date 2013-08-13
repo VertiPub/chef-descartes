@@ -1,0 +1,25 @@
+# Insert environment variables you'd like to use in development mode.
+#
+# Graphite server settings
+export GRAPHITE_URL=<%= node['descartes']['graphite_url'] %>
+export GRAPHITE_USER=<%= node['descartes']['graphite_user'] %>
+export GRAPHITE_PASS=<%= node['descartes']['graphite_pass'] %>
+export GRAPH_TEMPLATE=<%= node['descartes']['template'] %>
+
+
+# Misc
+export DATABASE_URL="postgres://<%= node['postgresql']['user'] %>:<%= node['postgresql']['password']['postgres'] %>@localhost/descartes"
+export METRICS_UPDATE_INTERVAL=<%= node['descartes']['metrics_update_interval'] %>
+export METRICS_UPDATE_ON_BOOT=<%= node['descartes']['metrics_update_on_boot'] %>
+export METRICS_UPDATE_TIMEOUT=<%= node['descartes']['metrics_update_timeout'] %>
+export RACK_ENV=<%= node['descartes']['rack_env'] %>
+export SESSION_SECRET=<%= node['descartes']['session_secret'] %>
+export USE_SVG=<%= node['descartes']['user_svg'] %>
+export API_TOKEN=<%= node['descartes']['api_key'] %>
+
+# OAuth type (either 'google' or 'github')
+export OAUTH_PROVIDER=<%= node['descartes']['oauth_provider'] %>
+
+# Google OpenID
+export GOOGLE_OAUTH_DOMAIN=<%= node['descartes']['google_oauth_domain'] %>
+
