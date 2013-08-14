@@ -42,6 +42,7 @@ group node['descartes']['group'] do
 end
 
 user node['descartes']['user'] do
+  comment 'Descartes user'
   uid node['descartes']['uid']
   gid node['descartes']['group']
   system true
@@ -68,7 +69,7 @@ end
 # Deploy descartes
 deploy node['descartes']['install_root'] do
   user node['descartes']['user']
-  group node['descartes']['descartes']
+  group node['descartes']['group']
   repository 'git://github.com/obfuscurity/descartes.git'
   revision 'master'
   # env is needed for db migration
