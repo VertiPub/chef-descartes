@@ -35,20 +35,6 @@ end
   end
 end
 
-group node['descartes']['group'] do
-  gid node['descartes']['gid']
-  system true
-  action :create
-end
-
-user node['descartes']['user'] do
-  comment 'Descartes user'
-  uid node['descartes']['uid']
-  gid node['descartes']['group']
-  system true
-  action :create
-end
-
 template '/etc/init.d/descartes' do
   source 'init.d.erb'
   owner 'root'
