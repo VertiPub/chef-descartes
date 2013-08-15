@@ -1,7 +1,6 @@
 default['descartes']['host_name'] = 'descartes'
 default['descartes']['host_aliases'] = [ 'descartes' ]
 default['descartes']['proxy_port'] = 80
-
 default['descartes']['session_secret'] = 'change_me'
 default['descartes']['graphite_url'] = 'http://localhost'
 default['descartes']['graphite_user'] = ''
@@ -18,3 +17,5 @@ default['descartes']['rack_env'] = 'production'
 default['descartes']['role_name'] = 'dashboard_server'
 default['descartes']['thin_port'] = 8080
 default['descartes']['install_root'] = '/opt/descartes'
+default['descartes']['user'] = 'descartes'
+default['descartes']['group'] = 'descartes'
