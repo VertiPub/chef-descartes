@@ -19,3 +19,4 @@ default['descartes']['thin_port'] = 8080
 default['descartes']['install_root'] = '/opt/descartes'
 default['descartes']['user'] = 'descartes'
 default['descartes']['group'] = 'descartes'
+default['descartes']['repository'] = 'git://github.com/obfuscurity/descartes.git'

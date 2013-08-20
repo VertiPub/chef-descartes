@@ -15,9 +15,9 @@ descartes_secret = Chef::EncryptedDataBagItem.load_secret("#{node['descartes']['
 postgresql_creds = Chef::EncryptedDataBagItem.load("secrets", "postgresql", descartes_secret)
 
 pg_superuser = postgresql_creds['super_user']
-pg_superuser_passwd = postgresql_creds['password'][pg_superuser]
+pg_superuser_passwd = postgresql_creds['super_user_password']
 pg_appuser = postgresql_creds['app_user']
-pg_appuser_passwd = postgresql_creds['password'][pg_appuser]
+pg_appuser_passwd = postgresql_creds['app_user_password']
 
 postgresql_connection_info = { :host     => 'localhost',
                                :port     => node['postgresql']['config']['port'],
@@ -30,6 +30,8 @@ postgresql_database 'descartes' do
   action :create
 end
 
+# Create database user for descartes, giving it all privileges for
+# descartes database
 postgresql_database_user pg_appuser do
   connection postgresql_connection_info
   password pg_appuser_passwd
@@ -75,10 +77,10 @@ end
 deploy node['descartes']['install_root'] do
   user node['descartes']['user']
   group node['descartes']['group']
-  repository 'git://github.com/obfuscurity/descartes.git'
+  repository node['descartes']['repository']
   revision 'master'
   # env is needed for db migration
-  environment :DATABASE_URL => descartes_db_url
+  environment "DATABASE_URL" => descartes_db_url
   # Override the default behavior i.e. to avoid symlinking database.yml(it is not present in our case)
   symlink_before_migrate ({})
   # Don't create any dir as we don't need any.
@@ -110,7 +112,7 @@ deploy node['descartes']['install_root'] do
       group new_resource.group
       mode '0644'
       variables(
-         :DATABASE_URL => descartes_db_url
+         "DATABASE_URL" => descartes_db_url
       )
     end
     # Install gems using bundle install. It will look for a Gemfile.lock in current release
