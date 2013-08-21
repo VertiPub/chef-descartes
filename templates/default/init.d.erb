@@ -25,9 +25,11 @@ RETVAL=0
 lockfile=/var/lock/subsys/descartes
 process_name=descartes
 user=<%= @user %>
+group=<%= @group %>
 install_root=<%= @install_root %>
 current_release_dir=${install_root}/current
-pidfile=${current_release_dir}/pids/descartes.pid
+piddir=/var/run/descartes
+pidfile=${piddir}/descartes.pid
 start_command="bundle exec rackup -p <%= @thin_port %> -s thin -P $pidfile -D"
 
 # export the required environment variables
@@ -46,6 +48,8 @@ function start() {
     fi
   else
     echo -n "Starting ${process_name}..."
+    mkdir -p $piddir
+    chown ${user}:${group} $piddir
     cd $current_release_dir
     # Start Descartes
     su $user -c "$start_command"
@@ -74,8 +78,7 @@ function stop() {
       # Now we want to remove lock file and pid file
       [ $RETVAL -eq 0 ] && rm -f $pidfile $lockfile
     else
-      echo -n "$process_name is not running, removing existing pid file"
-      rm -f $pidfile
+      echo -n "$process_name is not running"
     fi
   else
     echo -n "$process_name is not running"  

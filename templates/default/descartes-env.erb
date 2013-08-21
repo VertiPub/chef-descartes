@@ -5,13 +5,13 @@ export GRAPHITE_PASS=<%= node['descartes']['graphite_pass'] %>
 export GRAPH_TEMPLATE=<%= node['descartes']['graphite_template'] %>
 
 # Misc
-export DATABASE_URL="postgres://<%= node['postgresql']['user'] %>:<%= node['postgresql']['password']['postgres'] %>@localhost/descartes"
+export DATABASE_URL=<%= @DATABASE_URL %>
 export METRICS_UPDATE_INTERVAL=<%= node['descartes']['metrics_update_interval'] %>
 export METRICS_UPDATE_ON_BOOT=<%= node['descartes']['metrics_update_on_boot'] %>
 export METRICS_UPDATE_TIMEOUT=<%= node['descartes']['metrics_update_timeout'] %>
 export RACK_ENV=<%= node['descartes']['rack_env'] %>
 export SESSION_SECRET=<%= node['descartes']['session_secret'] %>
-export USE_SVG=<%= node['descartes']['user_svg'] %>
+export USE_SVG=<%= node['descartes']['use_svg'] %>
 export API_TOKEN=<%= node['descartes']['api_key'] %>
 
 # OAuth type (either 'google' or 'github')
